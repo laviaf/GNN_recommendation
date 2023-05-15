@@ -97,9 +97,14 @@ class STAM4Rec(Model):
         self.neg_items = self.placeholders['neg_items'] # [1, batch_size] idx: M ~ (M+N-1)
 
         # user embedding matrix and item embedding matrix
-        initializer = tf.random_normal_initializer(stddev=0.01)
-        self.user_embeddings = tf.Variable(initializer([self.n_users, self.input_dim]), name='user_embeddings') # [M, d]
-        self.item_embeddings = tf.Variable(initializer([self.n_items, self.input_dim]), name='item_embeddings') # [N, d]
+        # initializer = tf.random_normal_initializer(stddev=0.01)
+        # self.user_embeddings = tf.Variable(initializer([self.n_users, self.input_dim]), name='user_embeddings') # [M, d]
+        # self.item_embeddings = tf.Variable(initializer([self.n_items, self.input_dim]), name='item_embeddings') # [N, d]
+        self.label_dim = data_config['label_dim']
+        label_initializer = tf.keras.layers.Dense(self.input_dim)
+        label_initializer.build(input_shape=(None,self.label_dim))
+        self.user_embeddings = label_initializer(data_config['user_embeddings'])
+        self.item_embeddings = label_initializer(data_config['item_embeddings'])
         
         self.stam_layer = STAM(input_dim=self.input_dim, n_heads=self.n_heads,
                               input_length=self.input_length, hidden_dim=self.hidden_dim)
@@ -166,7 +171,7 @@ class STAM4Rec(Model):
         stam_weights_batch = tf.nn.softmax(tf.squeeze(tf.matmul(stam_outs_batch, tf.transpose(W_1, [0, 2, 1]))), 1)
         stam_weights = tf.concat([stam_weights, stam_weights_batch], 0)
 
-        # stam_weights -> adj 
+        # stam_weights -> adj: get the layer message passing matrix
         adj_mask = tf.multiply(stam_weights, self.mask) 
         adj_sum = tf.div_no_nan(adj_mask, tf.reduce_sum(adj_mask, 1, keep_dims=True))
         adj = tf.boolean_mask(adj_sum, self.mask)
@@ -178,7 +183,7 @@ class STAM4Rec(Model):
         return self.stam_weights
 
     def build_net(self): 
-        # stacking L layers     
+        # stacking L layers: lightgcn   
         ego_embeddings = self.init_embeddings 
         all_embeddings = [ego_embeddings] 
         for k in range(0, self.num_layers): 

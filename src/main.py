@@ -20,6 +20,9 @@ def train(data_generator, args):
     config['temporal_index'] = data_generator.temporal_index
     norm_adj = data_generator.get_adj_mat() 
     config['norm_adj'] = norm_adj
+    config['label_dim'] = data_generator.label_dim
+    config['user_embeddings'] = data_generator.user_embeddings
+    config['item_embeddings'] = data_generator.item_embeddings
     
     """
     ********************************************

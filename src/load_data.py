@@ -38,9 +38,11 @@ class Data(object):
             for l in f.readlines():
                 uid, iid = l.strip().split('\t')
                 self.n_nodes = max(self.n_nodes, int(iid))
+                self.n_users = max(self.n_users, int(uid))
                 self.n_test += 1
-        self.n_nodes += 1
-        self.n_users += 1
+                self.n_nodes += 1
+                self.n_users += 1
+            
         self.n_items = self.n_nodes - self.n_users
         self.print_statistics()
 
@@ -53,6 +55,10 @@ class Data(object):
                 self.R[int(uid), int(iid)-self.n_users] = 1.
         # build temporal table 
         self.train_temporal_table, self.temporal_index = self.build_temporal_table(self.maxlen, self.train_user_items_dict, self.train_item_users_dict) # [M+N, S] 
+        # initialize with word2vec embeddings
+        embeddings = np.load(path + '/embeddings.npz') # data in embeddings.npz: [[M, embedding dim],[N, embedding dim]]
+        self.user_embeddings, self.item_embeddings = embeddings[0], embeddings[1]
+        self.label_dim = self.user_embeddings.shape[1]
         
     def load_data_set(self, train_file, test_file):
         train_dict = defaultdict(list)

@@ -56,7 +56,7 @@ def read_ml(file_name):
         else:
             flag = True
 
-    user_item_time_sorted = sorted(user_items_times.items(), key=lambda x: int(x[0]))
+    user_item_time_sorted = sorted(user_items_times.items(), key=lambda x: int(x[0])) # Whats this for?
     
     # change user_id and item_id
     user_items_times_ok = defaultdict(list)
